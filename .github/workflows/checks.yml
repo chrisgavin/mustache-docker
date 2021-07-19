@@ -33,6 +33,7 @@ jobs:
       - name: Push
         if: ${{ github.event_name != 'pull_request' }}
         run: |
+          echo "${{ github.token }}" | docker login --username x-access-token --password-stdin containers.pkg.github.com
           exit_code=0
           message="$(docker manifest inspect "containers.pkg.github.com/chrisgavin/mustache:${{ steps.version.outputs.result }}" 2>&1)" || exit_code="$?"
           if [ "$message" == "name unknown" ]; then
