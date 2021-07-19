@@ -37,9 +37,14 @@ jobs:
       - name: Push
         if: ${{ github.event_name != 'pull_request' }}
         run: |
-          if !docker manifest inspect "containers.pkg.github.com/chrisgavin/mustache:${{ steps.version.outputs.result }}" &> /dev/null; then
+          exit_code=0
+          message="$(docker manifest inspect "containers.pkg.github.com/chrisgavin/mustache:${{ steps.version.outputs.result }}" 2>&1)" || exit_code="$?"
+          if [ "$message" == "name unknown" ]; then
             docker push "containers.pkg.github.com/chrisgavin/mustache:${{ steps.version.outputs.result }}"
             docker push "containers.pkg.github.com/chrisgavin/mustache:latest"
-          else
+          elif [ "$exit_code" == 0 ]; then
             >&2 echo "Docker image for this version is already pushed."
+          else
+            >&2 echo "$message"
+            exit "$exit_code"
           fi
