@@ -31,9 +31,11 @@ jobs:
       - name: Build
         run: docker build
           --build-arg "VERSION=${{ steps.version.outputs.result }}"
-          --tag "containers.pkg.github.com/chrisgavin/mustache:latest"
           --tag "containers.pkg.github.com/chrisgavin/mustache:${{ steps.version.outputs.result }}"
+          --tag "containers.pkg.github.com/chrisgavin/mustache:latest"
           .
       - name: Push
         if: ${{ github.event_name != 'pull_request' }}
-        run: docker push "containers.pkg.github.com/chrisgavin/mustache:latest" "containers.pkg.github.com/chrisgavin/mustache:${{ steps.version.outputs.result }}"
+        run: |
+          docker push "containers.pkg.github.com/chrisgavin/mustache:${{ steps.version.outputs.result }}"
+          docker push "containers.pkg.github.com/chrisgavin/mustache:latest"
