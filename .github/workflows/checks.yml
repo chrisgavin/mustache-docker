@@ -1,0 +1,39 @@
+name: Checks
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  schedule:
+    - cron: 0 0 * * *
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  checks:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+      - name: Get Latest Version
+        id: version
+        uses: actions/github-script@a3e7071a34d7e1f219a8a4de9a5e0a34d1ee1293
+        with:
+          script: |
+            const latestRelease = await github.repos.getLatestRelease({owner: "cbroglie", repo: "mustache"});
+            return latestRelease.data.tag_name.replace(/^v/, "");
+      - name: Build
+        run: docker build
+          --build-arg "VERSION=${{ steps.version.outputs.result }}"
+          --tag "containers.pkg.github.com/chrisgavin/mustache:latest"
+          --tag "containers.pkg.github.com/chrisgavin/mustache:${{ steps.version.outputs.result }}"
+          .
+      - name: Push
+        if: ${{ github.event_name != 'pull_request' }}
+        run: docker push "containers.pkg.github.com/chrisgavin/mustache:latest" "containers.pkg.github.com/chrisgavin/mustache:${{ steps.version.outputs.result }}"
